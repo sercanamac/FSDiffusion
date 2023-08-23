@@ -74,8 +74,15 @@ def CreateDataset(opt):
         test_dataset = BuildingNetDataset()
         train_dataset.initialize(opt, 'train', cat=opt.cat, res=opt.res)
         test_dataset.initialize(opt, 'test', cat=opt.cat, res=opt.res)
-
+    elif opt.dataset_mode == "snet_img2shape":
+        from datasets.snet_code_dataset import ShapeNetImg2ShapeDataset
+        train_dataset = ShapeNetImg2ShapeDataset()
+        test_dataset = ShapeNetImg2ShapeDataset()
+        train_dataset.initialize(opt, 'train', cat=opt.cat)
+        test_dataset.initialize(opt, 'test', cat=opt.cat)
     else:
+        print(opt.dataset_mode == "snet_img2shape", opt.dataset_mode)
+        exit()
         raise ValueError("Dataset [%s] not recognized." % opt.dataset_mode)
 
     cprint("[*] Dataset has been created: %s" % (train_dataset.name()), 'blue')

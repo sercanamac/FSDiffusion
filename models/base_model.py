@@ -25,7 +25,9 @@ def create_model(opt):
     elif opt.model == 'sdfusion-mm2shape':
         from models.sdfusion_mm_model import SDFusionMultiModal2ShapeModel
         model = SDFusionMultiModal2ShapeModel()
-        
+    elif opt.model == 'sdfusion-img2shape-few':
+        from models.sdfusion_img2shape_fewshot import SDFusionImage2ShapeModel
+        model = SDFusionImage2ShapeModel()
     else:
         raise ValueError("Model [%s] not recognized." % opt.model)
 

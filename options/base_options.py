@@ -39,11 +39,12 @@ class BaseOptions():
         self.parser.add_argument('--max_dataset_size', default=2147483648, type=int, help='chooses the maximum dataset size.')
         self.parser.add_argument('--nThreads', default=9, type=int, help='# threads for loading data')        
         self.parser.add_argument('--serial_batches', action='store_true', help='if true, takes images in order to make batches, otherwise takes them randomly')
+        self.parser.add_argument('--few', action='store_true', help='')
 
         ############## START: model related options ################
         self.parser.add_argument(
                             '--model', type=str, default='sdfusion',
-                            choices=['vqvae', 'sdfusion', 'sdfusion-img2shape', 'sdfusion-txt2shape','sdfusion-mm2shape'],
+                            choices=['vqvae', 'sdfusion', 'sdfusion-img2shape', 'sdfusion-txt2shape','sdfusion-mm2shape', 'sdfusion-img2shape-few'],
                             help='chooses which model to use.'
                         )
         self.parser.add_argument('--ckpt', type=str, default=None, help='ckpt to load.')

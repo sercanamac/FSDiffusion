@@ -44,3 +44,4 @@ class CLIPImageEncoder(nn.Module):
     def forward(self, x):
         # x is assumed to be in range [-1,1]
         return self.model.encode_image(self.preprocess(x))
+        

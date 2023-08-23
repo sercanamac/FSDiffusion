@@ -358,20 +358,20 @@ def crop_square(img, bbox, img_size_h=256, img_size_w=256):
 
 def preprocess_image(image, mask):
     if type(image) is str:
-        img_np = np.array(Image.open(image).convert('RGB'))
+        img_np = np.array(Image.open(image).convert('RGB')).astype(np.float32)
     else:
         img_np = image
     if type(mask) is str:
-        mask_np = np.array(Image.open(mask).convert('1'))
+        mask_np = np.array(Image.open(mask).convert('1')).astype(np.float32)
     else:
         mask_np = mask
-        
+
     # get bbox from mask
     x0, y0, x1, y1 = mask2bbox(mask_np)
     bbox = [x0, y0, x1, y1]
         
     r = 0.7
-    img_comp = img_np * mask_np[:, :, None] + (1 - mask_np[:, :, None]) * (r*255 + (1 - r) * img_np)
+    img_comp = img_np.astype(np.float32) * mask_np[:, :, None] + (1 - mask_np[:, :, None]) * (r*255 + (1 - r) * img_np.astype(np.float32))
     img_comp = crop_square(img_comp.astype(np.uint8), bbox)
     
     img_clean = img_np * mask_np[:, :, None]

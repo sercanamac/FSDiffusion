@@ -72,12 +72,15 @@ class SDFusionImage2ShapeModel(BaseModel):
         self.df = DiffusionUNet(unet_params, vq_conf=vq_conf, conditioning_key=df_model_params.conditioning_key)
         self.df.to(self.device)
         self.init_diffusion_params(uc_scale=self.uc_scale, opt=opt)
-
+        self.sup_proj = nn.Sequential(nn.Conv3d(z_ch, 128, kernel_size=3, padding="same"), nn.ReLU(), nn.GroupNorm(4, 128),nn.MaxPool3d(2,2),
+                                      nn.Conv3d(128, 256, 3, padding="same"), nn.ReLU(), nn.GroupNorm(8, 256),nn.MaxPool3d(2,2), nn.Conv3d(256, 768, 3,padding="same"),
+                                       nn.ReLU(), nn.GroupNorm(8, 768)).to(self.device)
+        
         # sampler 
         self.ddim_sampler = DDIMSampler(self)
 
         # init vqvae
-        self.vqvae = load_vqvae(vq_conf, vq_ckpt=opt.vq_ckpt, opt=opt).to("cuda")
+        self.vqvae = load_vqvae(vq_conf, vq_ckpt=opt.vq_ckpt, opt=opt).to("cpu")
 
         # init cond model
         clip_param = df_conf.clip.params
@@ -239,14 +242,15 @@ class SDFusionImage2ShapeModel(BaseModel):
         self.x = input['sdf']
         self.img = input['img']
         self.z = input["z"]
+        self.sup = input["sup_z"]
         self.uc_img = torch.zeros_like(self.img).to(self.device)
-
+        self.uc_sup = torch.zeros_like(self.sup).to(self.device)
         if max_sample is not None:
             self.x = self.x[:max_sample]
             self.img = self.img[:max_sample]
             self.uc_img = self.uc_img[:max_sample]
 
-        vars_list = ['x', 'img', 'z']
+        vars_list = ['x', 'img', 'z', 'sup']
 
         self.tocuda(var_names=vars_list)
 
@@ -319,7 +323,7 @@ class SDFusionImage2ShapeModel(BaseModel):
             target = noise
         else:
             raise NotImplementedError()
-
+        
         # l2
         loss_simple = self.get_loss(model_output, target, mean=False).mean([1, 2, 3, 4])
         loss_dict.update({f'loss_simple': loss_simple.mean()})
@@ -345,7 +349,9 @@ class SDFusionImage2ShapeModel(BaseModel):
         self.switch_train()
 
         c_img = self.cond_model(self.img).float()
-        
+        c_sup = self.sup_proj(self.sup)
+        c_sup = rearrange(c_sup, "b c d h w -> b (d h w) c")
+        c_img = torch.cat([c_img, c_sup], 1)
         # 1. encode to latent
         #    encoder, quant_conv, but do not quantize
         #    check: ldm.models.autoencoder.py, VQModelInterface's encode(self, x)
@@ -378,9 +384,16 @@ class SDFusionImage2ShapeModel(BaseModel):
 
         # get noise, denoise, and decode with vqvae
         uc = self.cond_model(self.uc_img).float() # img shape
+        sup_uc = self.sup_proj(self.uc_sup).float()
+        sup_uc = rearrange(sup_uc, "b c d h w -> b (d h w) c")
+        uc = torch.cat([uc, sup_uc], 1)
         c_img = self.cond_model(self.img).float()
+        c_sup = self.sup_proj(self.sup)
+        c_sup = rearrange(c_sup, "b c d h w -> b (d h w) c")
+        c_img = torch.cat([c_img, c_sup], 1)
         B = c_img.shape[0]
         shape = self.z_shape
+        
         samples, intermediates = self.ddim_sampler.sample(S=ddim_steps,
                                                         batch_size=B,
                                                         shape=shape,
@@ -392,10 +405,10 @@ class SDFusionImage2ShapeModel(BaseModel):
                                                         quantize_x0=False)
 
     
-        self.gen_df = self.vqvae_module.decode_no_quant(samples)
+        self.gen_df = self.vqvae_module.decode_no_quant(samples.to("cpu"))
         self.gen_gt = None
         if "z" in data:
-            self.gen_gt = self.vqvae_module.decode_no_quant(self.z)
+            self.gen_gt = self.vqvae_module.decode_no_quant(self.z.to("cpu"))
         self.switch_train()
 
     @torch.no_grad()
@@ -430,9 +443,16 @@ class SDFusionImage2ShapeModel(BaseModel):
 
         # get noise, denoise, and decode with vqvae
         uc = self.cond_model(self.uc_img).float() # img shape
+        sup_uc = self.sup_proj(self.uc_sup).float()
+        sup_uc = rearrange(sup_uc, "b c d h w -> b (d h w) c")
+        uc = torch.cat([uc, sup_uc], 1)
         c_img = self.cond_model(self.img).float()
         B = c_img.shape[0]
+        c_sup = self.sup_proj(self.sup)
+        c_sup = rearrange(c_sup, "b c d h w -> b (d h w) c")
+        c_img = torch.cat([c_img, c_sup], 1)
         shape = self.z_shape
+        
         samples, intermediates = self.ddim_sampler.sample(S=ddim_steps,
                                                         batch_size=B,
                                                         shape=shape,

@@ -23,13 +23,13 @@ fi
 ################
 
 ### hyper params ###
-lr=1e-5
+lr=1e-4
 batch_size=4
 backend="gloo"
 ####################
 
 ### model stuff ###
-model="sdfusion-img2shape"
+model="sdfusion-img2shape-few"
 df_cfg="configs/sdfusion-img2shape.yaml"
 
 vq_model="vqvae"
@@ -61,7 +61,7 @@ me=$(echo $me | cut -d"." -f 1)
 
 note="clean-code"
 
-name="img2shapeshapenet_frozen_clip"
+name="img2shapeshapenet_frozen_clip_few_x0"
 
 debug=0
 if [ $debug = 1 ]; then
@@ -82,7 +82,7 @@ cmd="train.py --name ${name} --logs_dir ${logs_dir} --gpu_ids ${gpu_ids} --lr ${
     --max_dataset_size ${max_dataset_size} --trunc_thres ${trunc_thres} \
     --display_freq ${display_freq} --print_freq ${print_freq} \
     --total_iters ${total_iters} --save_steps_freq ${save_steps_freq} \
-    --debug ${debug}"
+    --debug ${debug} --few" 
 
 if [ ! -z "$dataroot" ]; then
     cmd="${cmd} --dataroot ${dataroot}"

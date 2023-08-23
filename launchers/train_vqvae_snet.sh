@@ -22,7 +22,7 @@ fi
 
 ### hyper params ###
 lr=1e-4
-batch_size=11
+batch_size=8
 ####################
 
 ### model stuff ###
@@ -34,7 +34,7 @@ vq_cfg="configs/vqvae_snet.yaml"
 ### dataset stuff ###
 max_dataset_size=10000000
 dataset_mode='snet'
-dataroot="data"
+dataroot="/home/amac/SDFusion/data"
 res=64
 cat='all'
 # cat='chair'
@@ -44,8 +44,8 @@ trunc_thres=0.2
 ### display & log stuff ###
 display_freq=1000 # default: log every display_freq batches
 print_freq=25 # default:
-total_iters=100000000
-save_steps_freq=3000
+total_iters=200000
+save_steps_freq=25000
 ###########################
 
 today=$(date '+%m%d')

@@ -17,22 +17,31 @@
     },
     "all_cats": [
         "airplane",
-        "bench",
-        "cabinet",
         "car",
-        "chair",
+        "chair"
+
+    ],
+    "train_cats": [        "airplane",
+        "car",
+        "chair"],
+    "test_cats": [
+
+        "watercraft",
+        "rifle",
         "display",
         "lamp",
         "speaker",
-        "rifle",
+        "cabinet",
+        "bench",
         "sofa",
         "table",
-        "phone",
-        "watercraft"
+        "phone"
+
+                
     ],
     "raw_dirs_v1": {
-        "mesh_dir": "../data/ShapeNet/ShapeNetCore.v1/",
-        "norm_mesh_dir": "../data/ShapeNet/norm_mesh_dir_v1/",
-        "sdf_dir": "../data/ShapeNet/SDF_v1"
+        "mesh_dir": "/home/amac/SDFusion/data/ShapeNet/ShapeNetCore.v1/",
+        "norm_mesh_dir": "/home/amac/SDFusion/data/ShapeNet/norm_mesh_dir_v1/",
+        "sdf_dir": "/home/amac/SDFusion/data/ShapeNet/SDF_v1"
     }
 }
