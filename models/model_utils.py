@@ -6,7 +6,7 @@ from models.networks.vqvae_networks.network import VQVAE
 
 def load_vqvae(vq_conf, vq_ckpt, opt=None):
     assert type(vq_ckpt) == str
-
+    vq_ckpt = "vqvae_epoch-best.pth"
     # init vqvae for decoding shapes
     mparam = vq_conf.model.params
     n_embed = mparam.n_embed

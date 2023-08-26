@@ -19,7 +19,7 @@ from pytorch3d.ops import sample_points_from_meshes
 from datasets.base_dataset import BaseDataset
 from utils.demo_util import preprocess_image
 import glob
-
+from PIL import Image
 
 # from https://github.com/laughtervv/DISN/blob/master/preprocessing/info.json
 class ShapeNetImg2ShapeDataset(BaseDataset):
@@ -29,7 +29,7 @@ class ShapeNetImg2ShapeDataset(BaseDataset):
         self.max_dataset_size = opt.max_dataset_size
         self.res = res
         self.few = opt.few
-        dataroot = "/home/amac/SDFusion/data"
+        dataroot = "../data"
         # with open(f'{dataroot}/ShapeNet/info.json') as f:
         with open(f'dataset_info_files/info-shapenet.json') as f:
             self.info = json.load(f)
@@ -42,7 +42,7 @@ class ShapeNetImg2ShapeDataset(BaseDataset):
         else:
             all_cats = [cat]
 
-        all_imgs = glob.glob("/home/amac/data/ShapeNet55_3DOF-VC_LRBg/*/*/image_output/*.png")
+        all_imgs = glob.glob("..data/preprocessed/image_output/*.png")
 
         self.model_list = []
         self.cats_list = []
@@ -60,26 +60,27 @@ class ShapeNetImg2ShapeDataset(BaseDataset):
                 model_id = l.rstrip('\n')
                 if res == 64:
 
-                    path = f'{dataroot}/ShapeNet/SDF_v1_64/{synset}/{model_id}/ori_sample.h5'
+                    path = f'{dataroot}/SDF_v1_64/{synset}/{model_id}/ori_sample.h5'
                 else:
 
                     path = f'{dataroot}/ShapeNet/SDF_v2/resolution_{self.res}/{synset}/{model_id}/ori_sample_grid.h5'
                 
                 if os.path.exists(path):
                     model_list_s.append(path)
-                model_ids.append(model_id)
-                if model_id not in self.cat2model_list:
+                    if synset not in self.cat2model_list:
 
-                    self.cat2model_list[synset] = [path]
-                else:
-                    self.cat2model_list[synset].append(path)
+                        self.cat2model_list[synset] = [path]
+                    else:
+                        self.cat2model_list[synset].append(path)
+                model_ids.append(model_id)
+
 
 
             self.model_list += model_list_s
             self.cats_list += [synset] * len(model_list_s)
             print('[*] %d samples for %s (%s).' % (len(model_list_s), self.id_to_cat[synset], synset))
         
-        self.model2views = {model_id: glob.glob(f"/home/amac/data/ShapeNet55_3DOF-VC_LRBg/*/{model_id}/image_output/*.png") for model_id in model_ids}
+        self.model2views = {model_id: glob.glob(f"../data/preprocessed/*/{model_id}/image_output/*.png") for model_id in model_ids}
         np.random.default_rng(seed=0).shuffle(self.model_list)
         np.random.default_rng(seed=0).shuffle(self.cats_list)
         self.model_list = self.model_list[:self.max_dataset_size]
@@ -113,8 +114,7 @@ class ShapeNetImg2ShapeDataset(BaseDataset):
                 sdf = torch.clamp(sdf, min=-thres, max=thres)
             z = np.load(sdf_h5_file.replace("ori_sample.h5", "latent_code.npy"), allow_pickle=True).squeeze(0)
             view = np.random.choice(self.model2views[sdf_h5_file.split("/")[-2]], 1)[0]
-            
-            _, img = preprocess_image(str(view), str(view).replace("image_output", "segmentation"))
+            img = Image.open(str(view))
             img = self.transforms(img)
            
             ret = {
@@ -127,8 +127,10 @@ class ShapeNetImg2ShapeDataset(BaseDataset):
             }
             if self.few:
                 listo = self.cat2model_list[synset]
-                sup_path = np.random.choice(listo, 1)[0]
-                sup_code = np.load(sup_path.replace("ori_sample.h5", "latent_code.npy")).squeeze()
+                sup_paths = np.random.choice(listo, 1)
+                sup_codes = [np.load(sup_path.replace("ori_sample.h5", "latent_code.npy")) for sup_path in sup_paths]
+                sup_code = np.concatenate(sup_codes, axis=0)
+
                 ret["sup_z"] = sup_code
         except Exception as e:
             print(e)

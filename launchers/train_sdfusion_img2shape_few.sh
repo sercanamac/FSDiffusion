@@ -23,7 +23,7 @@ fi
 ################
 
 ### hyper params ###
-lr=1e-4
+lr=1e-5
 batch_size=4
 backend="gloo"
 ####################
@@ -61,7 +61,7 @@ me=$(echo $me | cut -d"." -f 1)
 
 note="clean-code"
 
-name="img2shapeshapenet_frozen_clip_few_x0"
+name="img2shapeshapenet_frozen_clip_few_1shot_bugfix"
 
 debug=0
 if [ $debug = 1 ]; then
