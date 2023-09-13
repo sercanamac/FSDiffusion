@@ -50,7 +50,7 @@ class ShapeNetDataset(BaseDataset):
                     model_id = l.rstrip('\n')
                     if res == 64:
 
-                        path = f'{dataroot}/ShapeNet/SDF_v1_64/{synset}/{model_id}/ori_sample.h5'
+                        path = f'../data/SDF_v1_64/{synset}/{model_id}/ori_sample.h5'
                     else:
 
                         path = f'{dataroot}/ShapeNet/SDF_v2/resolution_{self.res}/{synset}/{model_id}/ori_sample_grid.h5'

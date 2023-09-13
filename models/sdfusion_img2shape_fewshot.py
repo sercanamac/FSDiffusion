@@ -23,7 +23,7 @@ from models.base_model import BaseModel
 from models.networks.vqvae_networks.network import VQVAE
 from models.networks.diffusion_networks.network import DiffusionUNet
 from models.networks.clip_networks.network import CLIPImageEncoder
-from models.model_utils import load_vqvae
+from models.model_utils import load_vqvae, load_pvqvae
 
 ## ldm util
 from models.networks.diffusion_networks.ldm_diffusion_util import (
@@ -65,22 +65,31 @@ class SDFusionImage2ShapeModel(BaseModel):
         z_ch, n_down = ddconfig.z_channels, len(ddconfig.ch_mult)-1
         z_sp_dim = shape_res // (2 ** n_down)
         self.z_shape = (z_ch, z_sp_dim, z_sp_dim, z_sp_dim)
-
         df_model_params = df_conf.model.params
         unet_params = df_conf.unet.params
         self.uc_scale = 7.5
         self.df = DiffusionUNet(unet_params, vq_conf=vq_conf, conditioning_key=df_model_params.conditioning_key)
         self.df.to(self.device)
         self.init_diffusion_params(uc_scale=self.uc_scale, opt=opt)
-        self.sup_proj = nn.Sequential(nn.Conv3d(z_ch, 128, kernel_size=3, padding="same"), nn.ReLU(), nn.GroupNorm(4, 128),nn.MaxPool3d(2,2),
-                                      nn.Conv3d(128, 256, 3, padding="same"), nn.ReLU(), nn.GroupNorm(8, 256),nn.MaxPool3d(2,2), nn.Conv3d(256, 768, 3,padding="same"),
-                                       nn.ReLU(), nn.GroupNorm(8, 768)).to(self.device)
+        if opt.vq_model == "pvqvae":
+            self.sup_proj = nn.Sequential(nn.Conv3d(z_ch, 128, kernel_size=4,stride=2), nn.LeakyReLU(0.2), nn.GroupNorm(4, 128),
+                            nn.Conv3d(128, 256, 3, stride=2), nn.LeakyReLU(0.2), nn.GroupNorm(8, 256), nn.Conv3d(256, 768, 1),
+                            nn.ReLU(), nn.GroupNorm(8, 768)).to(self.device)
+        else:
+
+            self.sup_proj = nn.Sequential(nn.Conv3d(z_ch, 128, kernel_size=3, padding="same"), nn.ReLU(), nn.GroupNorm(4, 128),nn.MaxPool3d(2,2),
+                                        nn.Conv3d(128, 256, 3, padding="same"), nn.ReLU(), nn.GroupNorm(8, 256),nn.MaxPool3d(2,2), nn.Conv3d(256, 768, 3,padding="same"),
+                                        nn.ReLU(), nn.GroupNorm(8, 768)).to(self.device)
         
         # sampler 
         self.ddim_sampler = DDIMSampler(self)
 
-        # init vqvae
-        self.vqvae = load_vqvae(vq_conf, vq_ckpt=opt.vq_ckpt, opt=opt).to("cpu")
+        # init vqvae 
+        if opt.vq_model == "pvqvae":
+            print("loading pvqvae")
+            self.vqvae = load_pvqvae(vq_conf, vq_ckpt=opt.vq_ckpt, opt=opt).to("cpu")
+        else:
+            self.vqvae = load_vqvae(vq_conf, vq_ckpt=opt.vq_ckpt, opt=opt).to("cpu")
 
         # init cond model
         clip_param = df_conf.clip.params
@@ -108,7 +117,7 @@ class SDFusionImage2ShapeModel(BaseModel):
             self.print_networks(verbose=False)
 
         if opt.ckpt is not None:
-            self.load_ckpt(opt.ckpt, load_opt=self.isTrain)
+            self.load_ckpt(opt.ckpt, load_opt=False)
             
         # transforms
         self.to_tensor = transforms.ToTensor()
@@ -393,7 +402,7 @@ class SDFusionImage2ShapeModel(BaseModel):
         c_img = torch.cat([c_img, c_sup], 1)
         B = c_img.shape[0]
         shape = self.z_shape
-        
+
         samples, intermediates = self.ddim_sampler.sample(S=ddim_steps,
                                                         batch_size=B,
                                                         shape=shape,
@@ -545,7 +554,7 @@ class SDFusionImage2ShapeModel(BaseModel):
                             
         return OrderedDict(visuals)
 
-    def save(self, label, global_step, save_opt=False):
+    def save(self, label, global_step, save_opt=True):
         
         state_dict = {
             'vqvae': self.vqvae_module.state_dict(),

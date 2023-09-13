@@ -32,9 +32,9 @@ backend="gloo"
 model="sdfusion-img2shape"
 df_cfg="configs/sdfusion-img2shape.yaml"
 
-vq_model="vqvae"
-vq_cfg="configs/vqvae_snet.yaml"
-vq_ckpt="/home/amac/develop/SDFusion/logs_home/2023-06-25T13-48-37-vqvae-snet-all-res64-LR1e-4-T0.2-release/ckpt/vqvae_epoch-best.pth"
+vq_model="pvqvae"
+vq_cfg="configs/pvqvae_snet.yaml"
+vq_ckpt="/home/fslsegment/sercan/FSDiffusion/logs_home/2023-08-28T22-08-53-pvqvae-snet-all-res64-LR1e-4-T0.2-release/ckpt/vqvae_epoch-best.pth"
 vq_dset="snet"
 vq_cat="all"
 ###################
@@ -61,7 +61,7 @@ me=$(echo $me | cut -d"." -f 1)
 
 note="clean-code"
 
-name="img2shapeshapenet_frozen_clip"
+name="img2shapeshapenet_frozen_clip_pvqvae"
 
 debug=0
 if [ $debug = 1 ]; then

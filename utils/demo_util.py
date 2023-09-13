@@ -100,6 +100,20 @@ class SDFusionOpt(BaseOpt):
         self.vq_dset = 'snet'
         self.vq_cat = 'all'
 
+    def init_model_args_pvq(
+            self,
+            ckpt_path='saved_ckpt/sdfusion-snet-all.pth',
+            vq_ckpt_path='saved_ckpt/vqvae-snet-all.pth',
+        ):
+        self.model = 'sdfusion'
+        self.df_cfg = 'configs/sdfusion_snet.yaml'
+        self.ckpt = ckpt_path
+        
+        self.vq_model = 'pvqvae'
+        self.vq_cfg = 'configs/pvqvae_snet.yaml'
+        self.vq_ckpt = vq_ckpt_path
+        self.vq_dset = 'snet'
+        self.vq_cat = 'all'
     def name(self):
         return 'SDFusionTestOption'
 
@@ -159,12 +173,12 @@ class SDFusionImage2ShapeOpt(BaseOpt):
             ckpt_path='saved_ckpt/sdfusion-img2shape.pth',
             vq_ckpt_path='saved_ckpt/vqvae-snet-all.pth',
         ):
-        self.model = 'sdfusion-img2shape'
+        self.model = 'sdfusion-img2shape-few'
         self.df_cfg = 'configs/sdfusion-img2shape.yaml'
         self.ckpt = ckpt_path
         
-        self.vq_model = 'vqvae'
-        self.vq_cfg = 'configs/vqvae_snet.yaml'
+        self.vq_model = 'pvqvae'
+        self.vq_cfg = 'configs/pvqvae_snet.yaml'
         self.vq_ckpt = vq_ckpt_path
         self.vq_dset = 'snet'
         self.vq_cat = 'all'

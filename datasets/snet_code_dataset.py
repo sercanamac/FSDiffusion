@@ -112,7 +112,7 @@ class ShapeNetImg2ShapeDataset(BaseDataset):
             thres = self.opt.trunc_thres
             if thres != 0.0:
                 sdf = torch.clamp(sdf, min=-thres, max=thres)
-            z = np.load(sdf_h5_file.replace("ori_sample.h5", "latent_code.npy"), allow_pickle=True).squeeze(0)
+            z = np.load(sdf_h5_file.replace("ori_sample.h5", "latent_code_pvq.npy"), allow_pickle=True).squeeze(0)
             view = np.random.choice(self.model2views[sdf_h5_file.split("/")[-2]], 1)[0]
             img = Image.open(str(view))
             img = self.transforms(img)
@@ -128,8 +128,8 @@ class ShapeNetImg2ShapeDataset(BaseDataset):
             if self.few:
                 listo = self.cat2model_list[synset]
                 sup_paths = np.random.choice(listo, 1)
-                sup_codes = [np.load(sup_path.replace("ori_sample.h5", "latent_code.npy")) for sup_path in sup_paths]
-                sup_code = np.concatenate(sup_codes, axis=0)
+                sup_codes = [np.load(sup_path.replace("ori_sample.h5", "latent_code_pvq.npy")) for sup_path in sup_paths]
+                sup_code = np.concatenate(sup_codes, axis=0).squeeze()
 
                 ret["sup_z"] = sup_code
         except Exception as e:

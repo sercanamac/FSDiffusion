@@ -8,9 +8,9 @@ model:
 
 unet:
   params:
-    image_size: 16
-    in_channels: 3
-    out_channels: 3
+    image_size: 8
+    in_channels: 32
+    out_channels: 32
     model_channels: 128
     num_res_blocks: 2
     attention_resolutions:

@@ -28,6 +28,9 @@ def create_model(opt):
     elif opt.model == 'sdfusion-img2shape-few':
         from models.sdfusion_img2shape_fewshot import SDFusionImage2ShapeModel
         model = SDFusionImage2ShapeModel()
+    elif opt.model == "pvqvae":
+        from models.pvqvae_model import PVQVAEModel
+        model = PVQVAEModel()
     else:
         raise ValueError("Model [%s] not recognized." % opt.model)
 

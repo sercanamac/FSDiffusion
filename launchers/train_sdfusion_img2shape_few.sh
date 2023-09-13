@@ -23,7 +23,7 @@ fi
 ################
 
 ### hyper params ###
-lr=1e-5
+lr=1e-4
 batch_size=4
 backend="gloo"
 ####################
@@ -32,9 +32,9 @@ backend="gloo"
 model="sdfusion-img2shape-few"
 df_cfg="configs/sdfusion-img2shape.yaml"
 
-vq_model="vqvae"
-vq_cfg="configs/vqvae_snet.yaml"
-vq_ckpt="/home/amac/develop/SDFusion/logs_home/2023-06-25T13-48-37-vqvae-snet-all-res64-LR1e-4-T0.2-release/ckpt/vqvae_epoch-best.pth"
+vq_model="pvqvae"
+vq_cfg="configs/pvqvae_snet.yaml"
+vq_ckpt="/home/fslsegment/sercan/FSDiffusion/logs_home/2023-09-10T02-50-01-pvqvae-snet-all-res64-LR1e-4-T0.2-release/ckpt/vqvae_epoch-best.pth"
 vq_dset="snet"
 vq_cat="all"
 ###################
@@ -46,14 +46,13 @@ pix3d_mode="noBG"
 cat="all" 
 trunc_thres=0.2
 #####################
-
 ### display & log stuff ##
-display_freq=1000
+display_freq=5000
 print_freq=25
 total_iters=1000000
 save_steps_freq=10000
 ##########################
-
+Bunn
 
 today=$(date "+%m%d")
 me=`basename "$0"`
@@ -61,7 +60,7 @@ me=$(echo $me | cut -d"." -f 1)
 
 note="clean-code"
 
-name="img2shapeshapenet_frozen_clip_few_1shot_bugfix"
+name="img2shapeshapenet_frozen_clip_few_1shot_bugfix_pvqvae_small_big_bs41e5_cont"
 
 debug=0
 if [ $debug = 1 ]; then
@@ -113,4 +112,4 @@ echo "[*] Training with command: "
 echo "CUDA_VISIBLE_DEVICES=${gpu_ids} python ${cmd}"
 
 # CUDA_LAUNCH_BLOCKING=1 CUDA_VISIBLE_DEVICES=${gpu_ids} python ${cmd}
-CUDA_VISIBLE_DEVICES=${gpu_ids} python ${cmd}
+CUDA_VISIBLE_DEVICES=${gpu_ids} python -m debugpy --listen 0.0.0.0:5678 ${cmd} 

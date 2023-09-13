@@ -23,7 +23,8 @@ saved_ckpt*/
 # data
 data
 demo_data/
-
+logs/*
 # bak
+logs_home/*
 bak*/
 
